@@ -15,7 +15,11 @@ var Usuario = require('../models/usuario');
 // Obtener todos los usuarios.
 app.get('/',(req, res, next) => {
 
-    Usuario.find({},'nombre email img role').exec(
+    var desde = req.query.desde || 0;
+
+    desde = Number(desde);
+
+    Usuario.find({},'nombre email img role').skip(desde).limit(5).exec(
     (err, usuarios) => {
 
             if (err) {
@@ -26,14 +30,21 @@ app.get('/',(req, res, next) => {
                 });
             }
 
-            res.status(200).json({
-                ok:true,
-                usuarios: usuarios
+            Usuario.count({}, (err, count) => {
+
+                res.status(200).json({
+                    ok:true,
+                    usuarios: usuarios,
+                    total: count
+                });
+
             });
+
+          
 
     });
 
-});
+}); 
 
 // Actualizar datos.
 app.put('/:id', mdAutenticacion.verificaToken , (req, res) => {
@@ -62,7 +73,7 @@ app.put('/:id', mdAutenticacion.verificaToken , (req, res) => {
     usuario.nombre = body.nombre;
     usuario.email  = body.email;
     usuario.role   = body.role;
-
+    
     usuario.save((err,usuarioGuardado) => {
 
         if (err){
